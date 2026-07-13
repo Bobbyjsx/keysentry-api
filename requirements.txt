@@ -10,3 +10,4 @@ redis>=5.0.0
 PyGithub>=2.1.1
 httpx>=0.25.0
 email-validator>=2.0.0
+greenlet>=3.0.0
