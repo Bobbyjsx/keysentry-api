@@ -55,6 +55,13 @@ class AuthService:
                     detail=detail,
                 )
             
+            user_data = admin_response.json()
+            user_id_str = user_data.get("id")
+            
+            if user_id_str:
+                from src.core.events import event_bus
+                await event_bus.publish("USER_SIGNED_UP", user_id_str=user_id_str, email=auth_in.email, full_name=auth_in.full_name)
+
             # Automatically login to get the token since Admin API doesn't return a session
             return await self.login(
                 AuthLogin(email=auth_in.email, password=auth_in.password)

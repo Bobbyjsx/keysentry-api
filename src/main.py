@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.routers import api_keys, auth, user_data, scans
+from src.services.event_handlers import register_events
+
+# Register event bus listeners
+register_events()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
