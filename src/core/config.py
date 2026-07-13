@@ -10,12 +10,20 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # Queue (Celery / Redis)
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        return self.REDIS_URL
+        
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:
+        return self.REDIS_URL
 
     # Supabase Auth Integration
     SUPABASE_URL: str = "http://home-server:1024"
     SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     model_config = SettingsConfigDict(
         case_sensitive=True, env_file=".env", env_file_encoding="utf-8", extra="ignore"
