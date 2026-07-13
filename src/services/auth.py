@@ -1,39 +1,82 @@
-from fastapi import HTTPException
 import httpx
+import uuid
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.config import settings
-from src.schemas.user import AuthSignup, AuthLogin, AuthResponse
+from src.schemas.user import AuthLogin, AuthResponse, AuthSignup
+from src.models.user_data import Profile
+
 
 class AuthService:
-    def __init__(self):
+    def __init__(self, db: AsyncSession):
+        self.db = db
         if not settings.SUPABASE_ANON_KEY:
-            raise HTTPException(status_code=500, detail="SUPABASE_ANON_KEY not configured")
-        
+            raise HTTPException(
+                status_code=500, detail="SUPABASE_ANON_KEY not configured"
+            )
+
         self.headers = {
             "apikey": settings.SUPABASE_ANON_KEY,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+        }
+        self.admin_headers = {
+            "apikey": settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
         }
         self.base_url = settings.SUPABASE_URL
 
     async def signup(self, auth_in: AuthSignup) -> AuthResponse:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.base_url}/auth/v1/signup",
-                headers=self.headers,
-                json={"email": auth_in.email, "password": auth_in.password}
+        # Use the admin API to create the user and bypass email confirmation
+        if not settings.SUPABASE_SERVICE_ROLE_KEY:
+            raise HTTPException(
+                status_code=500,
+                detail="SUPABASE_SERVICE_ROLE_KEY not configured for admin signup",
             )
 
-            if response.status_code != 200:
-                error_data = response.json()
+        async with httpx.AsyncClient() as client:
+            # Create user via Admin API
+            admin_response = await client.post(
+                f"{self.base_url}/auth/v1/admin/users",
+                headers=self.admin_headers,
+                json={
+                    "email": auth_in.email,
+                    "password": auth_in.password,
+                    "email_confirm": True,
+                    "user_metadata": {"full_name": auth_in.full_name},
+                },
+            )
+
+            if admin_response.status_code != 200:
+                error_data = admin_response.json()
                 raise HTTPException(
-                    status_code=response.status_code,
-                    detail=error_data.get("msg", "Signup failed")
+                    status_code=admin_response.status_code,
+                    detail=error_data.get(
+                        "message", error_data.get("msg", "Admin signup failed")
+                    ),
                 )
-                
-            data = response.json()
-            return AuthResponse(
-                access_token=data.get("access_token", ""),
-                refresh_token=data.get("refresh_token", ""),
-                user_id=data.get("user", {}).get("id")
+            
+            user_data = admin_response.json()
+            user_id_str = user_data.get("id")
+            
+            if user_id_str:
+                try:
+                    profile = Profile(
+                        id=uuid.UUID(user_id_str),
+                        full_name=auth_in.full_name,
+                        username=auth_in.email.split('@')[0]
+                    )
+                    self.db.add(profile)
+                    await self.db.commit()
+                except Exception as e:
+                    await self.db.rollback()
+                    # Ignore if profile already exists (e.g., from DB trigger)
+                    print(f"Profile creation skipped or failed: {e}")
+
+            # Automatically login to get the token since Admin API doesn't return a session
+            return await self.login(
+                AuthLogin(email=auth_in.email, password=auth_in.password)
             )
 
     async def login(self, auth_in: AuthLogin) -> AuthResponse:
@@ -41,19 +84,19 @@ class AuthService:
             response = await client.post(
                 f"{self.base_url}/auth/v1/token?grant_type=password",
                 headers=self.headers,
-                json={"email": auth_in.email, "password": auth_in.password}
+                json={"email": auth_in.email, "password": auth_in.password},
             )
 
             if response.status_code != 200:
                 error_data = response.json()
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=error_data.get("error_description", "Login failed")
+                    detail=error_data.get("error_description", "Login failed"),
                 )
-                
+
             data = response.json()
             return AuthResponse(
                 access_token=data.get("access_token", ""),
                 refresh_token=data.get("refresh_token", ""),
-                user_id=data.get("user", {}).get("id")
+                user_id=data.get("user", {}).get("id"),
             )
