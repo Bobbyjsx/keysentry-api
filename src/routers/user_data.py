@@ -8,6 +8,7 @@ from src.repositories.user_data import UserDataRepository
 from src.services.user_data import UserDataService
 from src.schemas.alert import AlertCreate, AlertUpdate, AlertResponse
 from src.schemas.user import UserSettingsResponse, UserSettingsUpdate
+from src.core.security import get_current_user
 
 router = APIRouter(prefix="/users", tags=["user_data"])
 
@@ -19,29 +20,32 @@ def get_user_data_service(session: AsyncSession = Depends(get_db)) -> UserDataSe
 @router.post("/alerts", response_model=AlertResponse)
 async def create_alert(
     alert_in: AlertCreate,
+    current_user_id: UUID = Depends(get_current_user),
     service: UserDataService = Depends(get_user_data_service)
 ):
     """
     Create a new alert.
     """
+    alert_in.user_id = current_user_id
     return await service.create_alert(alert_in)
 
-@router.get("/{user_id}/alerts", response_model=List[AlertResponse])
+@router.get("/alerts", response_model=List[AlertResponse])
 async def list_user_alerts(
-    user_id: UUID,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    current_user_id: UUID = Depends(get_current_user),
     service: UserDataService = Depends(get_user_data_service)
 ):
     """
-    Retrieve alerts for a specific user.
+    Retrieve alerts for the currently authenticated user.
     """
-    return await service.get_user_alerts(user_id, skip, limit)
+    return await service.get_user_alerts(current_user_id, skip, limit)
 
 @router.patch("/alerts/{alert_id}", response_model=AlertResponse)
 async def update_alert(
     alert_id: UUID,
     update_in: AlertUpdate,
+    current_user_id: UUID = Depends(get_current_user),
     service: UserDataService = Depends(get_user_data_service)
 ):
     """
@@ -50,20 +54,20 @@ async def update_alert(
     return await service.update_alert_status(alert_id, update_in)
 
 # --- Settings ---
-@router.get("/{user_id}/settings", response_model=UserSettingsResponse)
+@router.get("/settings", response_model=UserSettingsResponse)
 async def get_user_settings(
-    user_id: UUID,
+    user_id: UUID = Depends(get_current_user),
     service: UserDataService = Depends(get_user_data_service)
 ):
     """
-    Retrieve settings for a user.
+    Retrieve settings for the currently authenticated user.
     """
     return await service.get_user_settings(user_id)
 
-@router.patch("/{user_id}/settings", response_model=UserSettingsResponse)
+@router.patch("/settings", response_model=UserSettingsResponse)
 async def update_user_settings(
-    user_id: UUID,
     update_in: UserSettingsUpdate,
+    user_id: UUID = Depends(get_current_user),
     service: UserDataService = Depends(get_user_data_service)
 ):
     """

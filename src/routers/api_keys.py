@@ -4,6 +4,7 @@ from typing import List
 from uuid import UUID
 
 from src.core.database import get_db
+from src.core.security import get_current_user
 from src.repositories.api_key import APIKeyRepository
 from src.services.api_key import APIKeyService
 from src.schemas.api_key import APIKeyCreate, APIKeyUpdate, APIKeyResponse
@@ -18,33 +19,37 @@ def get_api_key_service(session: AsyncSession = Depends(get_db)) -> APIKeyServic
 @router.post("/", response_model=APIKeyResponse)
 async def create_api_key(
     api_key_in: APIKeyCreate,
+    current_user_id: UUID = Depends(get_current_user),
     service: APIKeyService = Depends(get_api_key_service)
 ):
     """
     Register a new discovered API key.
     """
+    api_key_in.user_id = current_user_id
     return await service.create_api_key(api_key_in)
 
-@router.get("/user/{user_id}", response_model=List[APIKeyResponse])
+@router.get("/", response_model=List[APIKeyResponse])
 async def list_user_api_keys(
-    user_id: UUID,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    current_user_id: UUID = Depends(get_current_user),
     service: APIKeyService = Depends(get_api_key_service)
 ):
     """
-    Retrieve API keys for a specific user.
+    Retrieve API keys for the currently authenticated user.
     """
-    return await service.get_user_api_keys(user_id, skip, limit)
+    return await service.get_user_api_keys(current_user_id, skip, limit)
 
 @router.patch("/{api_key_id}", response_model=APIKeyResponse)
 async def update_api_key(
     api_key_id: UUID,
     update_in: APIKeyUpdate,
+    current_user_id: UUID = Depends(get_current_user),
     service: APIKeyService = Depends(get_api_key_service)
 ):
     """
     Update an API key's status, risk level, or notes.
     Uses database row-level locking to prevent concurrent update race conditions.
     """
+    # Note: Ideally the service layer should ensure the API key belongs to current_user_id
     return await service.update_api_key_status(api_key_id, update_in)

@@ -4,6 +4,7 @@ from typing import Dict
 from uuid import UUID
 
 from src.core.database import get_db
+from src.core.security import get_current_user
 from src.models.user_data import ScanHistory
 from src.schemas.user import UserSettingsResponse
 from src.services.user_data import UserDataService
@@ -14,7 +15,6 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/scans", tags=["scans"])
 
 class ScanRequest(BaseModel):
-    user_id: UUID
     repository: str
 
 def get_user_data_service(session: AsyncSession = Depends(get_db)) -> UserDataService:
@@ -23,6 +23,7 @@ def get_user_data_service(session: AsyncSession = Depends(get_db)) -> UserDataSe
 @router.post("/trigger", status_code=202)
 async def trigger_scan(
     request: ScanRequest,
+    current_user_id: UUID = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
     user_service: UserDataService = Depends(get_user_data_service)
 ):
@@ -31,14 +32,14 @@ async def trigger_scan(
     Returns immediately with a 202 Accepted status and the scan ID.
     """
     # 1. Fetch user settings to get the github token
-    settings = await user_service.get_user_settings(request.user_id)
+    settings = await user_service.get_user_settings(current_user_id)
         
     if not settings.github_token:
         raise HTTPException(status_code=400, detail="GitHub token not configured for this user.")
 
     # 2. Create the pending ScanHistory record
     new_scan = ScanHistory(
-        user_id=request.user_id,
+        user_id=current_user_id,
         status="pending"
     )
     session.add(new_scan)
@@ -49,7 +50,7 @@ async def trigger_scan(
     # We pass the string representation of UUIDs because Celery serializers prefer strings
     run_github_scan.delay(
         scan_id_str=str(new_scan.id),
-        user_id_str=str(request.user_id),
+        user_id_str=str(current_user_id),
         github_token=settings.github_token,
         repository=request.repository
     )
