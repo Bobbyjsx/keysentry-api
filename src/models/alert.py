@@ -15,7 +15,6 @@ class Alert(Base):
     description = Column(String, nullable=False)
     severity = Column(String, nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     
     user = relationship("Profile")
     api_key = relationship("APIKey")

@@ -17,8 +17,6 @@ class APIKey(Base):
     source = Column(String, nullable=False)
     link = Column(String)
     repository = Column(String)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     is_archived = Column(Boolean, default=False, nullable=False)
     risk_level = Column(String, default="high", nullable=False)
     notes = Column(String)

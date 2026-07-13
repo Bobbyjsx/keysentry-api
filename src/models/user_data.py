@@ -9,7 +9,6 @@ class Profile(Base):
     __tablename__ = "profiles"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
-    updated_at = Column(DateTime(timezone=True))
     username = Column(String, unique=True)
     full_name = Column(String)
     avatar_url = Column(String)
@@ -38,7 +37,5 @@ class UserSettings(Base):
     github_token = Column(String)
     scan_frequency = Column(String, default="daily", nullable=False)
     theme = Column(String, default="dark", nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     user = relationship("Profile")

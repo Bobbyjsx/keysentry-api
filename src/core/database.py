@@ -1,3 +1,5 @@
+from datetime import datetime
+from sqlalchemy import Column, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
@@ -15,9 +17,11 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
-Base = declarative_base()
+class TimestampMixin:
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-
+Base = declarative_base(cls=TimestampMixin)
 async def get_db() -> AsyncSession:
     """
     Dependency for getting an async database session.
