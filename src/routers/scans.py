@@ -31,10 +31,7 @@ async def trigger_scan(
     Returns immediately with a 202 Accepted status and the scan ID.
     """
     # 1. Fetch user settings to get the github token
-    try:
-        settings = await user_service.get_user_settings(request.user_id)
-    except HTTPException:
-        raise HTTPException(status_code=404, detail="User settings not found. Cannot retrieve GitHub token.")
+    settings = await user_service.get_user_settings(request.user_id)
         
     if not settings.github_token:
         raise HTTPException(status_code=400, detail="GitHub token not configured for this user.")

@@ -44,6 +44,12 @@ class UserDataRepository:
         return db_obj
 
     # --- User Settings ---
+    async def create_settings(self, db_obj: UserSettings) -> UserSettings:
+        self.session.add(db_obj)
+        await self.session.commit()
+        await self.session.refresh(db_obj)
+        return db_obj
+
     async def get_settings_by_user(self, user_id: UUID) -> Optional[UserSettings]:
         result = await self.session.execute(
             select(UserSettings).where(UserSettings.user_id == user_id)
