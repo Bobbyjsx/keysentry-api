@@ -1,16 +1,12 @@
 import httpx
-import uuid
 from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.schemas.user import AuthLogin, AuthResponse, AuthSignup
-from src.models.user_data import Profile
 
 
 class AuthService:
-    def __init__(self, db: AsyncSession):
-        self.db = db
+    def __init__(self):
         if not settings.SUPABASE_ANON_KEY:
             raise HTTPException(
                 status_code=500, detail="SUPABASE_ANON_KEY not configured"
@@ -59,23 +55,6 @@ class AuthService:
                     detail=detail,
                 )
             
-            user_data = admin_response.json()
-            user_id_str = user_data.get("id")
-            
-            if user_id_str:
-                try:
-                    profile = Profile(
-                        id=uuid.UUID(user_id_str),
-                        full_name=auth_in.full_name,
-                        username=auth_in.email.split('@')[0]
-                    )
-                    self.db.add(profile)
-                    await self.db.commit()
-                except Exception as e:
-                    await self.db.rollback()
-                    # Ignore if profile already exists (e.g., from DB trigger)
-                    print(f"Profile creation skipped or failed: {e}")
-
             # Automatically login to get the token since Admin API doesn't return a session
             return await self.login(
                 AuthLogin(email=auth_in.email, password=auth_in.password)
