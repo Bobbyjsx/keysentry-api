@@ -49,12 +49,14 @@ class AuthService:
             )
 
             if admin_response.status_code != 200:
-                error_data = admin_response.json()
+                try:
+                    error_data = admin_response.json()
+                    detail = error_data.get("msg", error_data.get("message", error_data.get("error_description", "Signup failed")))
+                except Exception:
+                    detail = admin_response.text or "Signup failed"
                 raise HTTPException(
                     status_code=admin_response.status_code,
-                    detail=error_data.get(
-                        "message", error_data.get("msg", "Admin signup failed")
-                    ),
+                    detail=detail,
                 )
             
             user_data = admin_response.json()
@@ -88,10 +90,14 @@ class AuthService:
             )
 
             if response.status_code != 200:
-                error_data = response.json()
+                try:
+                    error_data = response.json()
+                    detail = error_data.get("error_description", error_data.get("message", error_data.get("msg", "Login failed")))
+                except Exception:
+                    detail = response.text or "Login failed"
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=error_data.get("error_description", "Login failed"),
+                    detail=detail,
                 )
 
             data = response.json()
