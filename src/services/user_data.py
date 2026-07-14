@@ -52,6 +52,11 @@ class UserDataService:
                 status_code=400, detail="No fields provided for update."
             )
 
+        # Encrypt the github_token before saving if it's being updated
+        if "github_token" in update_data and update_data["github_token"]:
+            from src.core.encryption import encrypt
+            update_data["github_token"] = encrypt(update_data["github_token"])
+
         db_settings = await self.repository.get_settings_by_user_for_update(user_id)
         if not db_settings:
             new_settings = UserSettings(user_id=user_id, **update_data)

@@ -1,8 +1,10 @@
-from fastapi import APIRouter
-from src.schemas.user import AuthSignup, AuthLogin, AuthResponse
+from fastapi import APIRouter, Depends
+
+from src.schemas.user import AuthLogin, AuthResponse, AuthSignup, AuthRefresh
 from src.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 def get_auth_service() -> AuthService:
     return AuthService()
@@ -22,3 +24,10 @@ async def login(auth_in: AuthLogin, service: AuthService = Depends(get_auth_serv
     Authenticate a user directly against the connected Supabase Auth service.
     """
     return await service.login(auth_in)
+
+@router.post("/refresh", response_model=AuthResponse)
+async def refresh(auth_in: AuthRefresh, service: AuthService = Depends(get_auth_service)):
+    """
+    Refresh an expired access token using a valid refresh token.
+    """
+    return await service.refresh(auth_in.refresh_token)

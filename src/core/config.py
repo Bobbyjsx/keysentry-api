@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
 
+    # Encryption
+    ENCRYPTION_KEY: str = "change_me_in_production"
+    
+    # Trigger.dev Config
+    TRIGGER_API_KEY: str = ""
+    INTERNAL_API_SECRET: str = "super_secret_webhook_key_123"
+
     model_config = SettingsConfigDict(
         case_sensitive=True, env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
