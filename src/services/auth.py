@@ -1,5 +1,7 @@
 import httpx
 from fastapi import HTTPException
+import jwt
+from datetime import datetime, timezone, timedelta
 
 from src.core.config import settings
 from src.core.events import EventType
@@ -8,46 +10,31 @@ from src.schemas.user import AuthLogin, AuthResponse, AuthSignup
 
 class AuthService:
     def __init__(self):
-        if not settings.SUPABASE_ANON_KEY:
+        if not settings.GOTRUE_URL:
             raise HTTPException(
-                status_code=500, detail="SUPABASE_ANON_KEY not configured"
+                status_code=500, detail="GOTRUE_URL not configured"
             )
-
+        self.base_url = settings.GOTRUE_URL.rstrip("/")
         self.headers = {
-            "apikey": settings.SUPABASE_ANON_KEY,
             "Content-Type": "application/json",
         }
-        self.admin_headers = {
-            "apikey": settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY}",
-            "Content-Type": "application/json",
-        }
-        self.base_url = settings.SUPABASE_URL
 
     async def signup(self, auth_in: AuthSignup) -> AuthResponse:
-        # Use the admin API to create the user and bypass email confirmation
-        if not settings.SUPABASE_SERVICE_ROLE_KEY:
-            raise HTTPException(
-                status_code=500,
-                detail="SUPABASE_SERVICE_ROLE_KEY not configured for admin signup",
-            )
-
+        # Use the standard public signup API since GOTRUE_MAILER_AUTOCONFIRM is true
         async with httpx.AsyncClient() as client:
-            # Create user via Admin API
-            admin_response = await client.post(
-                f"{self.base_url}/auth/v1/admin/users",
-                headers=self.admin_headers,
+            response = await client.post(
+                f"{self.base_url}/signup",
+                headers=self.headers,
                 json={
                     "email": auth_in.email,
                     "password": auth_in.password,
-                    "email_confirm": True,
-                    "user_metadata": {"full_name": auth_in.full_name},
+                    "data": {"full_name": auth_in.full_name},
                 },
             )
 
-            if admin_response.status_code != 200:
+            if response.status_code != 200:
                 try:
-                    error_data = admin_response.json()
+                    error_data = response.json()
                     detail = error_data.get(
                         "msg",
                         error_data.get(
@@ -56,14 +43,14 @@ class AuthService:
                         ),
                     )
                 except Exception:
-                    detail = admin_response.text or "Signup failed"
+                    detail = response.text or "Signup failed"
                 raise HTTPException(
-                    status_code=admin_response.status_code,
+                    status_code=response.status_code,
                     detail=detail,
                 )
 
-            user_data = admin_response.json()
-            user_id_str = user_data.get("id")
+            data = response.json()
+            user_id_str = data.get("user", {}).get("id") or data.get("id")
 
             if user_id_str:
                 from src.core.events import event_bus
@@ -75,15 +62,17 @@ class AuthService:
                     full_name=auth_in.full_name,
                 )
 
-            # Automatically login to get the token since Admin API doesn't return a session
-            return await self.login(
-                AuthLogin(email=auth_in.email, password=auth_in.password)
+            # GoTrue /signup returns a session (access_token, refresh_token) if autoconfirm is true
+            return AuthResponse(
+                access_token=data.get("access_token", ""),
+                refresh_token=data.get("refresh_token", ""),
+                user_id=user_id_str,
             )
 
     async def login(self, auth_in: AuthLogin) -> AuthResponse:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/auth/v1/token?grant_type=password",
+                f"{self.base_url}/token?grant_type=password",
                 headers=self.headers,
                 json={"email": auth_in.email, "password": auth_in.password},
             )
@@ -114,7 +103,7 @@ class AuthService:
     async def refresh(self, refresh_token: str) -> AuthResponse:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/auth/v1/token?grant_type=refresh_token",
+                f"{self.base_url}/token?grant_type=refresh_token",
                 headers=self.headers,
                 json={"refresh_token": refresh_token},
             )

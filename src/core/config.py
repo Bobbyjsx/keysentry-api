@@ -20,11 +20,9 @@ class Settings(BaseSettings):
     def CELERY_RESULT_BACKEND(self) -> str:
         return self.REDIS_URL
 
-    # Supabase Auth Integration
-    SUPABASE_URL: str = "http://home-server:1024"
-    SUPABASE_ANON_KEY: str = ""
-    SUPABASE_SERVICE_ROLE_KEY: str = ""
-    SUPABASE_JWT_SECRET: str = ""
+    # Standalone GoTrue Integration
+    GOTRUE_URL: str = "http://localhost:9999"
+    GOTRUE_JWT_SECRET: str = ""
 
     # Encryption
     ENCRYPTION_KEY: str = "change_me_in_production"
