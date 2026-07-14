@@ -9,24 +9,13 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
-    # Queue (Celery / Redis)
-    REDIS_URL: str = "redis://localhost:6379/0"
-    
-    @property
-    def CELERY_BROKER_URL(self) -> str:
-        return self.REDIS_URL
-        
-    @property
-    def CELERY_RESULT_BACKEND(self) -> str:
-        return self.REDIS_URL
-
     # Standalone GoTrue Integration
     GOTRUE_URL: str = "http://localhost:9999"
     GOTRUE_JWT_SECRET: str = ""
 
     # Encryption
     ENCRYPTION_KEY: str = "change_me_in_production"
-    
+
     # Trigger.dev Config
     TRIGGER_API_KEY: str = ""
     INTERNAL_API_SECRET: str = "super_secret_webhook_key_123"
