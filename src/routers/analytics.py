@@ -45,15 +45,14 @@ async def get_analytics(
     keys_data = [
         {
             "id": str(k.id),
-            "key": k.key,
+            "key_hash": k.key_hash,
             "provider": k.provider,
             "status": k.status,
-            "riskLevel": k.risk_level,
-            "discoveredAt": k.discovered_at.isoformat(),
+            "risk_level": k.risk_level,
+            "discovered_at": k.discovered_at.isoformat(),
             "source": k.source,
-            "line": k.line,
-            "commitId": k.commit_id,
-            "author": k.author,
+            "link": k.link,
+            "repository": k.repository,
             "notes": k.notes,
         }
         for k in keys
