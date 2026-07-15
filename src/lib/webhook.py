@@ -38,10 +38,13 @@ class WebhookEngine:
             raise HTTPException(status_code=404, detail="Scan not found")
             
         import datetime
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         if scan.scan_date:
-            scan_date_naive = scan.scan_date.replace(tzinfo=None)
-            duration = int((now - scan_date_naive).total_seconds())
+            # Make scan_date timezone-aware if it isn't
+            scan_date_aware = scan.scan_date
+            if scan_date_aware.tzinfo is None:
+                scan_date_aware = scan_date_aware.replace(tzinfo=datetime.timezone.utc)
+            duration = int((now - scan_date_aware).total_seconds())
             scan.duration_seconds = max(0, duration)
             
         if payload.status == "failed":
@@ -62,6 +65,7 @@ class WebhookEngine:
         for key_data in payload.keys_found:
             new_key = APIKey(
                 user_id=payload.user_id,
+                scan_id=payload.scan_id,
                 provider=key_data.provider,
                 key_hash=key_data.key_hash,
                 source=key_data.source,

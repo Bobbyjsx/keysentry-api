@@ -78,8 +78,12 @@ class ScanService:
         if not scan:
             raise HTTPException(status_code=404, detail="Scan not found")
         
-        # Here we should also get the keys found in this scan, but the schema doesn't link keys to scans directly right now.
-        # So we'll just return the scan details.
+        from src.models.api_key import APIKey
+        from sqlalchemy import select
+        
+        result = await self.scan_repo.session.execute(select(APIKey).where(APIKey.scan_id == scan_id))
+        keys = result.scalars().all()
+        
         return {
             "scan": {
                 "id": str(scan.id),
@@ -92,8 +96,20 @@ class ScanService:
                 "filesScanned": scan.files_scanned,
                 "durationSeconds": scan.duration_seconds,
                 "keysFound": scan.keys_found,
+                "sources": [{"type": "github", "value": scan.trigger}] if scan.trigger and scan.trigger != "manual" else []
             },
-            "keys": []
+            "keys": [
+                {
+                    "id": str(k.id),
+                    "keyHash": k.key_hash,
+                    "provider": k.provider,
+                    "status": k.status,
+                    "repository": k.repository,
+                    "link": k.link,
+                    "riskLevel": k.risk_level
+                }
+                for k in keys
+            ]
         }
 
     async def list_scans(self, user_id: UUID, page: int, page_size: int) -> dict:

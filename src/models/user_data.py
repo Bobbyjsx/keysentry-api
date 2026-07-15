@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -19,7 +19,7 @@ class ScanHistory(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
-    scan_date = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    scan_date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     keys_found = Column(Integer, default=0, nullable=False)
     sources_scanned = Column(Integer, default=0, nullable=False)
     repos_scanned = Column(Integer, default=0, nullable=False)
