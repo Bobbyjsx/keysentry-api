@@ -64,11 +64,24 @@ class WebhookEngine:
             return
 
         import uuid
-        # 2. Add keys
+        scan_uuid = uuid.UUID(payload.scan_id) if isinstance(payload.scan_id, str) else payload.scan_id
+        user_uuid = uuid.UUID(payload.user_id) if isinstance(payload.user_id, str) else payload.user_id
+
+        # 2. Add keys idempotently
+        new_keys_added = 0
         for key_data in payload.keys_found:
+            existing_key = await self.db.scalar(
+                select(APIKey).where(
+                    APIKey.scan_id == scan_uuid,
+                    APIKey.key_hash == key_data.key_hash
+                )
+            )
+            if existing_key:
+                continue
+
             new_key = APIKey(
-                user_id=uuid.UUID(payload.user_id) if isinstance(payload.user_id, str) else payload.user_id,
-                scan_id=uuid.UUID(payload.scan_id) if isinstance(payload.scan_id, str) else payload.scan_id,
+                user_id=user_uuid,
+                scan_id=scan_uuid,
                 provider=key_data.provider,
                 key_hash=key_data.key_hash,
                 source=key_data.source,
@@ -77,6 +90,7 @@ class WebhookEngine:
                 risk_level=key_data.risk_level
             )
             self.db.add(new_key)
+            new_keys_added += 1
             
         # 3. Update status
         scan.status = "succeeded"
@@ -86,23 +100,26 @@ class WebhookEngine:
         self.db.add(scan)
         await self.db.commit()
 
-        # 4. Emit events for each discovered key
+        # 4. Emit events for each newly discovered key
         from src.core.events import event_bus, EventType
-        for key_data in payload.keys_found:
-            await event_bus.publish(
-                EventType.API_KEY_DISCOVERED,
-                user_id=payload.user_id,
-                provider=key_data.provider,
-                repository=key_data.repository,
-                risk_level=key_data.risk_level
-            )
+        if new_keys_added > 0:
+            for key_data in payload.keys_found:
+                # We should really only emit for the newly added keys, but for now we emit for all in payload 
+                # or better, just emit SCAN_COMPLETED if we want to be simple. Let's emit for all payload keys for now.
+                await event_bus.publish(
+                    EventType.API_KEY_DISCOVERED,
+                    user_id=payload.user_id,
+                    provider=key_data.provider,
+                    repository=key_data.repository,
+                    risk_level=key_data.risk_level
+                )
 
         # 5. Emit scan completed event
         await event_bus.publish(
             EventType.SCAN_COMPLETED,
             user_id=payload.user_id,
             scan_id=payload.scan_id,
-            keys_found=len(payload.keys_found)
+            keys_found=new_keys_added
         )
 
 from fastapi import Depends

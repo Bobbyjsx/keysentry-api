@@ -9,7 +9,7 @@ class APIKey(Base):
     __tablename__ = "api_keys"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
     scan_id = Column(UUID(as_uuid=True), ForeignKey("scan_history.id", ondelete="SET NULL"), nullable=True)
     key_hash = Column(String, nullable=False)
     provider = Column(String, nullable=False)
@@ -22,5 +22,5 @@ class APIKey(Base):
     risk_level = Column(String, default="high", nullable=False)
     notes = Column(String)
 
-    user = relationship("Profile")
+
 

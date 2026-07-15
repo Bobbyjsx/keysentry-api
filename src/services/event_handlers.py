@@ -1,26 +1,7 @@
 import uuid
 from src.core.events import event_bus, EventType
 from src.core.database import AsyncSessionLocal
-from src.models.user_data import Profile
 
-async def handle_user_signed_up(user_id_str: str, email: str, full_name: str):
-    """
-    Handles the USER_SIGNED_UP event by creating the necessary Profile record.
-    UserSettings will be created lazily when accessed.
-    """
-    async with AsyncSessionLocal() as db:
-        try:
-            profile = Profile(
-                id=uuid.UUID(user_id_str),
-                full_name=full_name,
-                username=email.split('@')[0]
-            )
-            db.add(profile)
-            await db.commit()
-            print(f"Profile created successfully for user {user_id_str}")
-        except Exception as e:
-            await db.rollback()
-            print(f"Failed to create profile for user {user_id_str}: {e}")
 
 from src.models.user_data import UserSettings
 from src.models.alert import Alert
@@ -41,10 +22,9 @@ async def handle_api_key_discovered(user_id: str, provider: str, repository: str
             alert = Alert(
                 user_id=user_uuid,
                 title="API Key Exposed!",
-                message=alert_msg,
-                type="security",
+                description=alert_msg,
                 severity=risk_level,
-                status="unread"
+                is_read=False
             )
             db.add(alert)
 
@@ -79,10 +59,9 @@ async def handle_scan_completed(user_id: str, scan_id: str, keys_found: int):
                 alert = Alert(
                     user_id=uuid.UUID(user_id),
                     title="Scan Completed",
-                    message="Scan completed successfully. No new keys found.",
-                    type="info",
+                    description="Scan completed successfully. No new keys found.",
                     severity="low",
-                    status="unread"
+                    is_read=False
                 )
                 db.add(alert)
                 await db.commit()
@@ -96,10 +75,9 @@ async def handle_scan_failed(user_id: str, scan_id: str, error: str):
             alert = Alert(
                 user_id=uuid.UUID(user_id),
                 title="Scan Failed",
-                message=f"A background scan failed to complete. Error: {error or 'Unknown'}",
-                type="system",
+                description=f"A background scan failed to complete. Error: {error or 'Unknown'}",
                 severity="medium",
-                status="unread"
+                is_read=False
             )
             db.add(alert)
             await db.commit()
@@ -108,7 +86,6 @@ async def handle_scan_failed(user_id: str, scan_id: str, error: str):
             print(f"Failed to handle SCAN_FAILED: {e}")
 
 def register_events():
-    event_bus.subscribe(EventType.USER_SIGNED_UP, handle_user_signed_up)
     event_bus.subscribe(EventType.API_KEY_DISCOVERED, handle_api_key_discovered)
     event_bus.subscribe(EventType.SCAN_COMPLETED, handle_scan_completed)
     event_bus.subscribe(EventType.SCAN_FAILED, handle_scan_failed)
