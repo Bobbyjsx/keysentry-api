@@ -7,8 +7,8 @@ class ScanRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_scan(self, user_id: UUID, status: str = "pending") -> ScanHistory:
-        new_scan = ScanHistory(user_id=user_id, status=status)
+    async def create_scan(self, user_id: UUID, status: str = "pending", trigger: str = None) -> ScanHistory:
+        new_scan = ScanHistory(user_id=user_id, status=status, trigger=trigger)
         self.session.add(new_scan)
         await self.session.commit()
         await self.session.refresh(new_scan)

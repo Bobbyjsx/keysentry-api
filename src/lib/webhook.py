@@ -22,6 +22,8 @@ class WebhookPayload(BaseModel):
     keys_found: List[KeyFoundPayload] = []
     status: str = "succeeded"
     error: Optional[str] = None
+    files_scanned: int = 0
+    repos_scanned: int = 0
 
 class WebhookEngine:
     def __init__(self, db: AsyncSession):
@@ -61,11 +63,12 @@ class WebhookEngine:
             )
             return
 
+        import uuid
         # 2. Add keys
         for key_data in payload.keys_found:
             new_key = APIKey(
-                user_id=payload.user_id,
-                scan_id=payload.scan_id,
+                user_id=uuid.UUID(payload.user_id) if isinstance(payload.user_id, str) else payload.user_id,
+                scan_id=uuid.UUID(payload.scan_id) if isinstance(payload.scan_id, str) else payload.scan_id,
                 provider=key_data.provider,
                 key_hash=key_data.key_hash,
                 source=key_data.source,
@@ -78,6 +81,8 @@ class WebhookEngine:
         # 3. Update status
         scan.status = "succeeded"
         scan.keys_found = len(payload.keys_found)
+        scan.files_scanned = payload.files_scanned
+        scan.repos_scanned = payload.repos_scanned
         self.db.add(scan)
         await self.db.commit()
 

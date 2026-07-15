@@ -26,7 +26,7 @@ class ScanService:
             )
 
         # 2. Create the pending ScanHistory record
-        new_scan = await self.scan_repo.create_scan(current_user_id, status="pending")
+        new_scan = await self.scan_repo.create_scan(current_user_id, status="pending", trigger=target)
 
         # 3. Dispatch the Trigger.dev background task
         try:
