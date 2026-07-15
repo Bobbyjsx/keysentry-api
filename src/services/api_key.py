@@ -31,3 +31,10 @@ class APIKeyService:
             raise HTTPException(status_code=404, detail="API Key not found")
 
         return await self.repository.update(db_key, update_data)
+
+    async def delete_api_key(self, api_key_id: UUID) -> dict:
+        db_key = await self.repository.get_by_id_for_update(api_key_id)
+        if not db_key:
+            raise HTTPException(status_code=404, detail="API Key not found")
+        await self.repository.delete(db_key)
+        return {"success": True}

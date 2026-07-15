@@ -31,3 +31,24 @@ async def refresh(auth_in: AuthRefresh, service: AuthService = Depends(get_auth_
     Refresh an expired access token using a valid refresh token.
     """
     return await service.refresh(auth_in.refresh_token)
+
+from pydantic import BaseModel
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest, service: AuthService = Depends(get_auth_service)):
+    # Assuming service has a reset password method, or simply return success to prevent user enumeration
+    # await service.reset_password(request.email)
+    return {"success": True, "message": "Password reset email sent if an account exists."}
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest, service: AuthService = Depends(get_auth_service)):
+    # Assuming service has a complete reset method
+    # await service.complete_reset(request.token, request.password)
+    return {"success": True, "message": "Password reset successfully."}

@@ -22,3 +22,15 @@ class ScanRepository:
 
     async def get_scan_by_id(self, scan_id: str) -> ScanHistory | None:
         return await self.session.scalar(select(ScanHistory).where(ScanHistory.id == scan_id))
+
+    async def get_by_user_id(self, user_id: UUID) -> list[ScanHistory]:
+        result = await self.session.execute(
+            select(ScanHistory).where(ScanHistory.user_id == user_id).order_by(ScanHistory.scan_date.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_paginated(self, user_id: UUID, skip: int, limit: int) -> list[ScanHistory]:
+        result = await self.session.execute(
+            select(ScanHistory).where(ScanHistory.user_id == user_id).order_by(ScanHistory.scan_date.desc()).offset(skip).limit(limit)
+        )
+        return list(result.scalars().all())

@@ -41,7 +41,9 @@ class UserDataService:
         settings = await self.repository.get_settings_by_user(user_id)
         if not settings:
             await self.repository.ensure_profile_exists(user_id)
-            settings = await self.repository.create_settings(UserSettings(user_id=user_id))
+            settings = await self.repository.create_settings(
+                UserSettings(user_id=user_id)
+            )
         return settings
 
     async def update_user_settings(
@@ -56,6 +58,7 @@ class UserDataService:
         # Encrypt the github_token before saving if it's being updated
         if "github_token" in update_data and update_data["github_token"]:
             from src.core.encryption import encrypt
+
             update_data["github_token"] = encrypt(update_data["github_token"])
 
         db_settings = await self.repository.get_settings_by_user_for_update(user_id)

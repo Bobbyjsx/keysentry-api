@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 
 class EventType(str, Enum):
     USER_SIGNED_UP = "USER_SIGNED_UP"
+    API_KEY_DISCOVERED = "API_KEY_DISCOVERED"
+    SCAN_COMPLETED = "SCAN_COMPLETED"
+    SCAN_FAILED = "SCAN_FAILED"
 
 
 class Event:

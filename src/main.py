@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
-from src.routers import api_keys, auth, user_data, scans
+from src.routers import api_keys, auth, user_data, scans, analytics
 from src.services.event_handlers import register_events
 
 # Register event bus listeners
@@ -28,6 +28,7 @@ app.include_router(api_keys.router, prefix=settings.API_V1_STR)
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(user_data.router, prefix=settings.API_V1_STR)
 app.include_router(scans.router, prefix=settings.API_V1_STR)
+app.include_router(analytics.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health"])
 async def health_check():
