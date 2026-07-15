@@ -8,7 +8,8 @@ class ScanRepository:
         self.session = session
 
     async def create_scan(self, user_id: UUID, status: str = "pending", trigger: str = None) -> ScanHistory:
-        new_scan = ScanHistory(user_id=user_id, status=status, trigger=trigger)
+        sources = [{"type": "github", "value": trigger}] if trigger and trigger != "manual" else []
+        new_scan = ScanHistory(user_id=user_id, status=status, trigger=trigger, sources=sources)
         self.session.add(new_scan)
         await self.session.commit()
         await self.session.refresh(new_scan)

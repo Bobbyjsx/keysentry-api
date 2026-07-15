@@ -96,7 +96,7 @@ class ScanService:
                 "filesScanned": scan.files_scanned,
                 "durationSeconds": scan.duration_seconds,
                 "keysFound": scan.keys_found,
-                "sources": [{"type": "github", "value": scan.trigger}] if scan.trigger and scan.trigger != "manual" else []
+                "sources": scan.sources if scan.sources else []
             },
             "keys": [
                 {

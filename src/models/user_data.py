@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from src.core.database import Base
@@ -28,6 +28,7 @@ class ScanHistory(Base):
     status = Column(String, default="in_progress", nullable=False)
     trigger = Column(String, default="manual", nullable=False)
     trigger_link = Column(String)
+    sources = Column(JSON, default=list, nullable=False)
     
     user = relationship("Profile")
 
