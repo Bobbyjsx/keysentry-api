@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.alert import Alert
-from src.models.user_data import Profile, UserSettings
+from src.models.user_data import UserSettings
 from src.schemas.alert import AlertCreate
 
 
@@ -76,18 +76,4 @@ class UserDataRepository:
         await self.session.refresh(db_obj)
         return db_obj
 
-    # --- Profile ---
-    async def get_profile_by_user(self, user_id: UUID) -> Optional[Profile]:
-        result = await self.session.execute(
-            select(Profile).where(Profile.id == user_id)
-        )
-        return result.scalars().first()
 
-    async def ensure_profile_exists(self, user_id: UUID) -> Profile:
-        profile = await self.get_profile_by_user(user_id)
-        if not profile:
-            profile = Profile(id=user_id, username=f"user_{str(user_id)[:8]}")
-            self.session.add(profile)
-            await self.session.commit()
-            await self.session.refresh(profile)
-        return profile

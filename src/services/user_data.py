@@ -40,7 +40,6 @@ class UserDataService:
     async def get_user_settings(self, user_id: UUID) -> UserSettings:
         settings = await self.repository.get_settings_by_user(user_id)
         if not settings:
-            await self.repository.ensure_profile_exists(user_id)
             settings = await self.repository.create_settings(
                 UserSettings(user_id=user_id)
             )
@@ -63,7 +62,6 @@ class UserDataService:
 
         db_settings = await self.repository.get_settings_by_user_for_update(user_id)
         if not db_settings:
-            await self.repository.ensure_profile_exists(user_id)
             new_settings = UserSettings(user_id=user_id, **update_data)
             return await self.repository.create_settings(new_settings)
 
