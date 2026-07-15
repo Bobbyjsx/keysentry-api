@@ -30,12 +30,14 @@ app.include_router(user_data.router, prefix=settings.API_V1_STR)
 app.include_router(scans.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
 
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
     Health check endpoint for the KeySentry API.
     """
     return {"status": "healthy", "service": settings.PROJECT_NAME}
+
 
 # For running separately:
 # uvicorn src.main:app --host 0.0.0.0 --port 8000

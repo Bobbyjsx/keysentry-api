@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime
 from uuid import UUID
 
+
 class APIKeyBase(BaseModel):
     key_hash: str
     provider: str
@@ -14,8 +15,10 @@ class APIKeyBase(BaseModel):
     risk_level: str = "high"
     notes: Optional[str] = None
 
+
 class APIKeyCreate(APIKeyBase):
     user_id: UUID
+
 
 class APIKeyUpdate(BaseModel):
     status: Optional[str] = None
@@ -23,11 +26,12 @@ class APIKeyUpdate(BaseModel):
     risk_level: Optional[str] = None
     notes: Optional[str] = None
 
+
 class APIKeyResponse(APIKeyBase):
     id: UUID
     user_id: UUID
     discovered_at: datetime
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)

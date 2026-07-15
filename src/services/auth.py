@@ -1,7 +1,5 @@
 import httpx
 from fastapi import HTTPException
-import jwt
-from datetime import datetime, timezone, timedelta
 
 from src.core.config import settings
 from src.core.events import EventType
@@ -11,9 +9,7 @@ from src.schemas.user import AuthLogin, AuthResponse, AuthSignup
 class AuthService:
     def __init__(self):
         if not settings.GOTRUE_URL:
-            raise HTTPException(
-                status_code=500, detail="GOTRUE_URL not configured"
-            )
+            raise HTTPException(status_code=500, detail="GOTRUE_URL not configured")
         self.base_url = settings.GOTRUE_URL.rstrip("/")
         self.headers = {
             "Content-Type": "application/json",

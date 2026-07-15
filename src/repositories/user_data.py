@@ -75,5 +75,3 @@ class UserDataRepository:
         await self.session.commit()
         await self.session.refresh(db_obj)
         return db_obj
-
-

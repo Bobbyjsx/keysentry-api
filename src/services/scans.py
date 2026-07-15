@@ -5,12 +5,13 @@ from src.repositories.scans import ScanRepository
 from src.services.user_data import UserDataService
 from src.lib.trigger import TriggerClient
 
+
 class ScanService:
     def __init__(
         self,
         scan_repo: ScanRepository,
         user_service: UserDataService,
-        trigger_client: TriggerClient
+        trigger_client: TriggerClient,
     ):
         self.scan_repo = scan_repo
         self.user_service = user_service
@@ -26,7 +27,9 @@ class ScanService:
             )
 
         # 2. Create the pending ScanHistory record
-        new_scan = await self.scan_repo.create_scan(current_user_id, status="pending", trigger=target)
+        new_scan = await self.scan_repo.create_scan(
+            current_user_id, status="pending", trigger=target
+        )
 
         # 3. Dispatch the Trigger.dev background task
         try:
@@ -77,13 +80,15 @@ class ScanService:
         scan = await self.scan_repo.get_scan_by_id(scan_id)
         if not scan:
             raise HTTPException(status_code=404, detail="Scan not found")
-        
+
         from src.models.api_key import APIKey
         from sqlalchemy import select
-        
-        result = await self.scan_repo.session.execute(select(APIKey).where(APIKey.scan_id == scan_id))
+
+        result = await self.scan_repo.session.execute(
+            select(APIKey).where(APIKey.scan_id == scan_id)
+        )
         keys = result.scalars().all()
-        
+
         return {
             "scan": {
                 "id": str(scan.id),
@@ -96,7 +101,7 @@ class ScanService:
                 "filesScanned": scan.files_scanned,
                 "durationSeconds": scan.duration_seconds,
                 "keysFound": scan.keys_found,
-                "sources": scan.sources if scan.sources else []
+                "sources": scan.sources if scan.sources else [],
             },
             "keys": [
                 {
@@ -106,10 +111,10 @@ class ScanService:
                     "status": k.status,
                     "repository": k.repository,
                     "link": k.link,
-                    "riskLevel": k.risk_level
+                    "riskLevel": k.risk_level,
                 }
                 for k in keys
-            ]
+            ],
         }
 
     async def list_scans(self, user_id: UUID, page: int, page_size: int) -> dict:
@@ -130,4 +135,7 @@ class ScanService:
             }
             for s in scans
         ]
-        return {"data": data, "count": len(data)} # Note: count should ideally be total count
+        return {
+            "data": data,
+            "count": len(data),
+        }  # Note: count should ideally be total count

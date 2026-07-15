@@ -7,7 +7,10 @@ from src.models.user_data import UserSettings
 from src.models.alert import Alert
 import httpx
 
-async def handle_api_key_discovered(user_id: str, provider: str, repository: str, risk_level: str):
+
+async def handle_api_key_discovered(
+    user_id: str, provider: str, repository: str, risk_level: str
+):
     """
     Handles API_KEY_DISCOVERED by:
     1. Creating an in-app Alert.
@@ -16,7 +19,7 @@ async def handle_api_key_discovered(user_id: str, provider: str, repository: str
     async with AsyncSessionLocal() as db:
         try:
             user_uuid = uuid.UUID(user_id)
-            
+
             # 1. Create Alert
             alert_msg = f"Exposed {provider} key found in {repository}"
             alert = Alert(
@@ -24,15 +27,17 @@ async def handle_api_key_discovered(user_id: str, provider: str, repository: str
                 title="API Key Exposed!",
                 description=alert_msg,
                 severity=risk_level,
-                is_read=False
+                is_read=False,
             )
             db.add(alert)
 
             # 2. Check User Settings for notifications
             settings = await db.scalar(
-                __import__("sqlalchemy").select(UserSettings).where(UserSettings.user_id == user_uuid)
+                __import__("sqlalchemy")
+                .select(UserSettings)
+                .where(UserSettings.user_id == user_uuid)
             )
-            
+
             if settings and settings.slack_webhook:
                 # Send Slack webhook asynchronously
                 async with httpx.AsyncClient() as client:
@@ -40,14 +45,15 @@ async def handle_api_key_discovered(user_id: str, provider: str, repository: str
                         settings.slack_webhook,
                         json={
                             "text": f"🚨 *KeySentry Alert*\n{alert_msg}\nRisk Level: {risk_level.upper()}"
-                        }
+                        },
                     )
-                    
+
             await db.commit()
             print(f"Handled API key discovery for user {user_id}")
         except Exception as e:
             await db.rollback()
             print(f"Failed to handle API_KEY_DISCOVERED for user {user_id}: {e}")
+
 
 async def handle_scan_completed(user_id: str, scan_id: str, keys_found: int):
     async with AsyncSessionLocal() as db:
@@ -61,13 +67,14 @@ async def handle_scan_completed(user_id: str, scan_id: str, keys_found: int):
                     title="Scan Completed",
                     description="Scan completed successfully. No new keys found.",
                     severity="low",
-                    is_read=False
+                    is_read=False,
                 )
                 db.add(alert)
                 await db.commit()
         except Exception as e:
             await db.rollback()
             print(f"Failed to handle SCAN_COMPLETED: {e}")
+
 
 async def handle_scan_failed(user_id: str, scan_id: str, error: str):
     async with AsyncSessionLocal() as db:
@@ -77,13 +84,14 @@ async def handle_scan_failed(user_id: str, scan_id: str, error: str):
                 title="Scan Failed",
                 description=f"A background scan failed to complete. Error: {error or 'Unknown'}",
                 severity="medium",
-                is_read=False
+                is_read=False,
             )
             db.add(alert)
             await db.commit()
         except Exception as e:
             await db.rollback()
             print(f"Failed to handle SCAN_FAILED: {e}")
+
 
 def register_events():
     event_bus.subscribe(EventType.API_KEY_DISCOVERED, handle_api_key_discovered)

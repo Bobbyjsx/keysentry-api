@@ -17,8 +17,6 @@ from src.services.user_data import UserDataService
 router = APIRouter(prefix="/scans", tags=["scans"])
 
 
-from typing import List, Optional
-
 class ScanRequest(BaseModel):
     target: str
 
@@ -47,6 +45,7 @@ async def trigger_scan(
     """
     return await scan_service.trigger_github_scan(current_user_id, request.target)
 
+
 @router.get("/history")
 async def get_scan_history(
     current_user_id: UUID = Depends(get_current_user),
@@ -56,6 +55,7 @@ async def get_scan_history(
     Returns the scan history for the current user.
     """
     return await scan_service.get_scan_history(current_user_id)
+
 
 @router.get("/{scan_id}")
 async def get_scan_details(
@@ -67,6 +67,7 @@ async def get_scan_details(
     Returns details for a specific scan.
     """
     return await scan_service.get_scan_details(scan_id)
+
 
 @router.get("/")
 async def list_scans(
@@ -80,9 +81,11 @@ async def list_scans(
     """
     return await scan_service.list_scans(current_user_id, page, pageSize)
 
+
 class ManualScanRequest(BaseModel):
     targetType: str
     targetValue: str
+
 
 @router.post("/manual")
 async def trigger_manual_scan(
@@ -115,9 +118,11 @@ async def scan_webhook(
     await webhook_engine.process_scan_webhook(payload)
     return {"status": "success"}
 
+
 class GitHubWebhookRequest(BaseModel):
     user_id: UUID
     repository: str
+
 
 @router.post("/github-webhook")
 async def github_webhook(

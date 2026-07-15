@@ -1,3 +1,6 @@
-from src.models.api_key import APIKey
-from src.models.alert import Alert
-from src.models.user_data import ScanHistory, UserSettings
+from src.models.api_key import APIKey as APIKey
+from src.models.alert import Alert as Alert
+from src.models.user_data import (
+    ScanHistory as ScanHistory,
+    UserSettings as UserSettings,
+)

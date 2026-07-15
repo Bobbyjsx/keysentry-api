@@ -23,9 +23,10 @@ def get_current_user(
     try:
         if not settings.GOTRUE_JWT_SECRET:
             raise HTTPException(
-                status_code=500, detail="GOTRUE_JWT_SECRET is not configured for validation"
+                status_code=500,
+                detail="GOTRUE_JWT_SECRET is not configured for validation",
             )
-            
+
         payload = jwt.decode(
             token,
             settings.GOTRUE_JWT_SECRET,

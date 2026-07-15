@@ -4,7 +4,8 @@ from uuid import UUID
 from typing import List, Optional
 
 from src.models.api_key import APIKey
-from src.schemas.api_key import APIKeyCreate, APIKeyUpdate
+from src.schemas.api_key import APIKeyCreate
+
 
 class APIKeyRepository:
     def __init__(self, session: AsyncSession):
@@ -32,7 +33,9 @@ class APIKeyRepository:
         )
         return result.scalars().first()
 
-    async def get_by_user_id(self, user_id: UUID, skip: int = 0, limit: int = 100) -> List[APIKey]:
+    async def get_by_user_id(
+        self, user_id: UUID, skip: int = 0, limit: int = 100
+    ) -> List[APIKey]:
         result = await self.session.execute(
             select(APIKey).where(APIKey.user_id == user_id).offset(skip).limit(limit)
         )
