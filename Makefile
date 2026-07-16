@@ -1,4 +1,4 @@
-.PHONY: install dev worker clean init-db lint lint:fix
+.PHONY: install dev worker clean init-db lint lint-fix
 
 # Variables
 PYTHON = .venv/bin/python
@@ -29,7 +29,7 @@ lint:
 	@echo "Running Ruff formatter check..."
 	.venv/bin/ruff format --check .
 
-lint:fix:
+lint-fix:
 	@echo "Formatting and fixing code with Ruff..."
 	.venv/bin/ruff check --fix .
 	.venv/bin/ruff format .
