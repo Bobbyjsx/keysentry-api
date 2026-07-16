@@ -1,4 +1,4 @@
-.PHONY: install dev worker clean init-db
+.PHONY: install dev worker clean init-db lint lint:fix
 
 # Variables
 PYTHON = .venv/bin/python
@@ -22,6 +22,17 @@ worker:
 init-db:
 	@echo "Initializing database schema..."
 	$(PYTHON) init_db.py
+
+lint:
+	@echo "Running Ruff linter..."
+	.venv/bin/ruff check .
+	@echo "Running Ruff formatter check..."
+	.venv/bin/ruff format --check .
+
+lint:fix:
+	@echo "Formatting and fixing code with Ruff..."
+	.venv/bin/ruff check --fix .
+	.venv/bin/ruff format .
 
 clean:
 	@echo "Cleaning up python cache files..."
