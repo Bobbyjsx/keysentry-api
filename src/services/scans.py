@@ -21,7 +21,9 @@ class ScanService:
         # 1. Fetch user settings to get the github token
         settings = await self.user_service.get_user_settings(current_user_id)
 
-        if not settings.github_token:
+        github_token = settings.github_token
+
+        if not github_token:
             raise HTTPException(
                 status_code=400, detail="GitHub token not configured for this user."
             )
@@ -39,7 +41,7 @@ class ScanService:
                     "scan_id": str(new_scan.id),
                     "user_id": str(current_user_id),
                     "repository": target,
-                    "encrypted_token": settings.github_token,
+                    "encrypted_token": github_token,
                 },
             )
         except Exception as e:
