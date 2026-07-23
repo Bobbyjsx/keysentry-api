@@ -17,7 +17,7 @@ def auth_headers():
 @pytest.mark.asyncio
 async def test_get_analytics(client: AsyncClient, db_session, auth_headers):
     headers, user_id = auth_headers
-    resp = await client.get("/api/v1/analytics/", headers=headers)
+    resp = await client.get("/api/v1/analytics", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
     assert "keys" in data

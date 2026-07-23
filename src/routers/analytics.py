@@ -11,7 +11,7 @@ from src.repositories.api_key import APIKeyRepository
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
-@router.get("/")
+@router.get("")
 async def get_analytics(
     current_user_id: UUID = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),

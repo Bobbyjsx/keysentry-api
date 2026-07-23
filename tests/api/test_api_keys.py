@@ -19,7 +19,7 @@ async def test_api_key_lifecycle(client: AsyncClient, db_session, auth_headers):
     headers, user_id = auth_headers
 
     # 1. Get empty
-    resp = await client.get("/api/v1/discoveries/", headers=headers)
+    resp = await client.get("/api/v1/discoveries", headers=headers)
     assert resp.status_code == 200
     assert resp.json() == []
 
@@ -41,7 +41,7 @@ async def test_api_key_lifecycle(client: AsyncClient, db_session, auth_headers):
     await db_session.commit()
 
     # 3. Get the key
-    resp = await client.get("/api/v1/discoveries/", headers=headers)
+    resp = await client.get("/api/v1/discoveries", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -61,6 +61,6 @@ async def test_api_key_lifecycle(client: AsyncClient, db_session, auth_headers):
     assert resp.json()["success"] is True
 
     # 6. Verify it's gone
-    resp = await client.get("/api/v1/discoveries/", headers=headers)
+    resp = await client.get("/api/v1/discoveries", headers=headers)
     assert resp.status_code == 200
     assert resp.json() == []

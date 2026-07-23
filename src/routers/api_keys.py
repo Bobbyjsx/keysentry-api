@@ -18,7 +18,7 @@ def get_api_key_service(session: AsyncSession = Depends(get_db)) -> APIKeyServic
     return APIKeyService(repository)
 
 
-@router.post("/", response_model=APIKeyResponse)
+@router.post("", response_model=APIKeyResponse)
 async def create_api_key(
     api_key_in: APIKeyCreate,
     current_user_id: UUID = Depends(get_current_user),
@@ -31,7 +31,7 @@ async def create_api_key(
     return await service.create_api_key(api_key_in)
 
 
-@router.get("/", response_model=List[APIKeyResponse])
+@router.get("", response_model=List[APIKeyResponse])
 async def list_user_api_keys(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),

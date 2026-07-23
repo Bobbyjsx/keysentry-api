@@ -27,6 +27,8 @@ class WebhookPayload(BaseModel):
     error: Optional[str] = None
     files_scanned: int = 0
     repos_scanned: int = 0
+    scanned_repositories: List[str] = []
+    attempt: int = 1
 
 
 class WebhookEngine:
@@ -58,6 +60,8 @@ class WebhookEngine:
 
         if payload.status == "failed":
             scan.status = "failed"
+            scan.error = payload.error
+            scan.attempt = payload.attempt
             self.db.add(scan)
             await self.db.commit()
 
@@ -108,11 +112,26 @@ class WebhookEngine:
             self.db.add(new_key)
             new_keys_added += 1
 
-        # 3. Update status
-        scan.status = "succeeded"
-        scan.keys_found = len(payload.keys_found)
+        # 3. Update status and progress
+        scan.status = payload.status
+        scan.error = payload.error
+        scan.attempt = payload.attempt
+
+        # Accumulate total keys found
+        scan.keys_found = scan.keys_found + new_keys_added
+
+        # Update files and repos (assuming payload has total for this attempt, we should just overwrite or add?)
+        # Wait, if we are keeping track across retries, the worker should send the cumulative total.
         scan.files_scanned = payload.files_scanned
         scan.repos_scanned = payload.repos_scanned
+
+        if payload.scanned_repositories:
+            current_sources = (
+                set(scan.sources) if isinstance(scan.sources, list) else set()
+            )
+            current_sources.update(payload.scanned_repositories)
+            scan.sources = list(current_sources)
+
         self.db.add(scan)
         await self.db.commit()
 
@@ -121,8 +140,6 @@ class WebhookEngine:
 
         if new_keys_added > 0:
             for key_data in payload.keys_found:
-                # We should really only emit for the newly added keys, but for now we emit for all in payload
-                # or better, just emit SCAN_COMPLETED if we want to be simple. Let's emit for all payload keys for now.
                 await event_bus.publish(
                     EventType.API_KEY_DISCOVERED,
                     user_id=payload.user_id,
@@ -131,13 +148,14 @@ class WebhookEngine:
                     risk_level=key_data.risk_level,
                 )
 
-        # 5. Emit scan completed event
-        await event_bus.publish(
-            EventType.SCAN_COMPLETED,
-            user_id=payload.user_id,
-            scan_id=payload.scan_id,
-            keys_found=new_keys_added,
-        )
+        # 5. Emit scan completed event only if fully succeeded
+        if payload.status == "succeeded":
+            await event_bus.publish(
+                EventType.SCAN_COMPLETED,
+                user_id=payload.user_id,
+                scan_id=payload.scan_id,
+                keys_found=new_keys_added,
+            )
 
 
 def get_webhook_engine(db: AsyncSession = Depends(get_db)) -> WebhookEngine:

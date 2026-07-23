@@ -53,7 +53,7 @@ async def test_scan_webhook_success(client: AsyncClient, db_session):
     token = create_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
 
-    resp2 = await client.get("/api/v1/discoveries/", headers=headers)
+    resp2 = await client.get("/api/v1/discoveries", headers=headers)
     assert resp2.status_code == 200
     keys = resp2.json()
     assert len(keys) == 1

@@ -21,6 +21,8 @@ class ScanHistory(Base):
     files_scanned = Column(Integer, default=0, nullable=False)
     duration_seconds = Column(Integer, default=0, nullable=False)
     status = Column(String, default="in_progress", nullable=False)
+    attempt = Column(Integer, default=1, nullable=False)
+    error = Column(String, nullable=True)
     trigger = Column(String, default="manual", nullable=False)
     trigger_link = Column(String)
     sources = Column(JSON, default=list, nullable=False)

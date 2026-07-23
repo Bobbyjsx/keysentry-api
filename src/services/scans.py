@@ -74,6 +74,8 @@ class ScanService:
                 "filesScanned": s.files_scanned,
                 "durationSeconds": s.duration_seconds,
                 "keysFound": s.keys_found,
+                "attempt": getattr(s, "attempt", 1),
+                "error": getattr(s, "error", None),
             }
             for s in scans
         ]
@@ -103,6 +105,8 @@ class ScanService:
                 "filesScanned": scan.files_scanned,
                 "durationSeconds": scan.duration_seconds,
                 "keysFound": scan.keys_found,
+                "attempt": getattr(scan, "attempt", 1),
+                "error": getattr(scan, "error", None),
                 "sources": scan.sources if scan.sources else [],
             },
             "keys": [
@@ -134,6 +138,8 @@ class ScanService:
                 "filesScanned": s.files_scanned,
                 "durationSeconds": s.duration_seconds,
                 "keysFound": s.keys_found,
+                "attempt": getattr(s, "attempt", 1),
+                "error": getattr(s, "error", None),
             }
             for s in scans
         ]

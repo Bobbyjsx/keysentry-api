@@ -69,7 +69,26 @@ async def get_scan_details(
     return await scan_service.get_scan_details(scan_id)
 
 
-@router.get("/")
+@router.get("/internal/{scan_id}")
+async def internal_get_scan_details(
+    scan_id: str,
+    req: Request,
+    scan_service: ScanService = Depends(get_scan_service),
+):
+    from src.core.config import settings
+
+    internal_token = req.headers.get("x-internal-token")
+    if (
+        not settings.INTERNAL_API_SECRET
+        or internal_token != settings.INTERNAL_API_SECRET
+    ):
+        logging.warning("Unauthorized internal scan access attempt")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    return await scan_service.get_scan_details(scan_id)
+
+
+@router.get("")
 async def list_scans(
     page: int = 1,
     pageSize: int = 20,
