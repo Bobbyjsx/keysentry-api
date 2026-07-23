@@ -28,6 +28,7 @@ class ScanHistory(Base):
     sources = Column(JSON, default=list, nullable=False)
     scanned_repositories = Column(JSON, default=list, nullable=False)
 
+
 class UserSettings(Base):
     __tablename__ = "user_settings"
 

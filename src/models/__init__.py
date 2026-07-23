@@ -4,3 +4,4 @@ from src.models.user_data import (
     ScanHistory as ScanHistory,
     UserSettings as UserSettings,
 )
+from src.models.repository import Repository as Repository

@@ -124,8 +124,12 @@ class WebhookEngine:
         scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned  # type: ignore
 
         if payload.scanned_repositories:
-            current_scanned = scan.scanned_repositories if isinstance(scan.scanned_repositories, list) else []
-            new_scanned = list(set(current_scanned + payload.scanned_repositories))
+            current_scanned = (
+                scan.scanned_repositories
+                if isinstance(scan.scanned_repositories, list)
+                else []
+            )
+            new_scanned = list(set(current_scanned + payload.scanned_repositories))  # type: ignore
             scan.scanned_repositories = new_scanned  # type: ignore
             scan.repos_scanned = len(new_scanned)  # type: ignore
 
@@ -137,11 +141,13 @@ class WebhookEngine:
                     select(Repository).where(
                         Repository.user_id == user_uuid,
                         Repository.name == repo_name,
-                        Repository.provider == "github"
+                        Repository.provider == "github",
                     )
                 )
                 if existing_repo:
-                    existing_repo.last_scanned_at = datetime.datetime.now(datetime.timezone.utc)
+                    existing_repo.last_scanned_at = datetime.datetime.now(  # type: ignore
+                        datetime.timezone.utc
+                    )
                     self.db.add(existing_repo)
                 else:
                     new_repo = Repository(
@@ -149,7 +155,7 @@ class WebhookEngine:
                         name=repo_name,
                         provider="github",
                         url=f"https://github.com/{repo_name}",
-                        last_scanned_at=datetime.datetime.now(datetime.timezone.utc)
+                        last_scanned_at=datetime.datetime.now(datetime.timezone.utc),
                     )
                     self.db.add(new_repo)
 
