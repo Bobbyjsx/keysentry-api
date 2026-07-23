@@ -1,5 +1,5 @@
 import uuid
-from src.core import logger
+from src.core.logger import logger
 from src.core.events import event_bus, EventType
 from src.core.database import AsyncSessionLocal
 

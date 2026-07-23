@@ -2,7 +2,4 @@
   "venvPath": ".",
   "venv": ".venv",
   "typeCheckingMode": "basic",
-  "reportAttributeAccessIssue": "none",
-  "reportGeneralTypeIssues": "none",
-  "reportArgumentType": "none"
 }

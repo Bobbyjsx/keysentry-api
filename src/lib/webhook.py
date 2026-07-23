@@ -50,18 +50,18 @@ class WebhookEngine:
         import datetime
 
         now = datetime.datetime.now(datetime.timezone.utc)
-        if scan.scan_date:
+        if scan.scan_date:  # type: ignore
             # Make scan_date timezone-aware if it isn't
             scan_date_aware = scan.scan_date
             if scan_date_aware.tzinfo is None:
                 scan_date_aware = scan_date_aware.replace(tzinfo=datetime.timezone.utc)
             duration = int((now - scan_date_aware).total_seconds())
-            scan.duration_seconds = max(0, duration)
+            scan.duration_seconds = max(0, duration)  # type: ignore
 
         if payload.status == "failed":
-            scan.status = "failed"
-            scan.error = payload.error
-            scan.attempt = payload.attempt
+            scan.status = "failed"  # type: ignore
+            scan.error = payload.error  # type: ignore
+            scan.attempt = payload.attempt  # type: ignore
             self.db.add(scan)
             await self.db.commit()
 
@@ -113,12 +113,12 @@ class WebhookEngine:
             new_keys_added += 1
 
         # 3. Update status and progress
-        scan.status = payload.status
-        scan.error = payload.error
-        scan.attempt = payload.attempt
+        scan.status = payload.status  # type: ignore
+        scan.error = payload.error  # type: ignore
+        scan.attempt = payload.attempt  # type: ignore
 
         # Accumulate total keys found
-        scan.keys_found = scan.keys_found + new_keys_added
+        scan.keys_found = scan.keys_found + new_keys_added  # type: ignore
 
         # Accumulate files scanned incrementally
         scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned  # type: ignore

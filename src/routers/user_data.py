@@ -69,7 +69,7 @@ async def get_unread_alerts_count(
     """
     # Simply count where status == 'unread'
     alerts = await service.get_user_alerts(current_user_id, 0, 1000)
-    return {"count": sum(1 for a in alerts if not a.is_read)}
+    return {"count": sum(1 for a in alerts if not a.is_read)}  # type: ignore
 
 
 @router.post("/alerts/{alert_id}/read")
@@ -94,8 +94,8 @@ async def mark_all_alerts_read(
     """
     alerts = await service.get_user_alerts(current_user_id, 0, 1000)
     for alert in alerts:
-        if not alert.is_read:
-            await service.update_alert_status(alert.id, AlertUpdate(is_read=True))
+        if not alert.is_read:  # type: ignore
+            await service.update_alert_status(alert.id, AlertUpdate(is_read=True))  # type: ignore
     return {"success": True}
 
 

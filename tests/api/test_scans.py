@@ -166,9 +166,9 @@ async def test_scan_webhook_accumulation(client: AsyncClient, db_session):
     # Verify accumulation
     await db_session.refresh(scan)
     # Initial 5 + 15 + 10 = 30
-    assert scan.files_scanned == 30
+    assert scan.files_scanned == 30  # type: ignore
     # repo1, repo2 = 2 repos
-    assert scan.repos_scanned == 2
-    assert len(scan.sources) == 2
+    assert scan.repos_scanned == 2  # type: ignore
+    assert len(scan.sources) == 2  # type: ignore
     assert "repo1" in scan.sources
     assert "repo2" in scan.sources

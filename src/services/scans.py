@@ -23,7 +23,7 @@ class ScanService:
 
         github_token = settings.github_token
 
-        if not github_token:
+        if not github_token:  # type: ignore
             raise HTTPException(
                 status_code=400, detail="GitHub token not configured for this user."
             )
@@ -107,7 +107,7 @@ class ScanService:
                 "keysFound": scan.keys_found,
                 "attempt": getattr(scan, "attempt", 1),
                 "error": getattr(scan, "error", None),
-                "sources": scan.sources if scan.sources else [],
+                "sources": scan.sources if scan.sources else [],  # type: ignore
             },
             "keys": [
                 {

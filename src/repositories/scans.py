@@ -9,7 +9,10 @@ class ScanRepository:
         self.session = session
 
     async def create_scan(
-        self, user_id: UUID, status: str = "pending", trigger: str = None
+        self,
+        user_id: UUID,
+        status: str = "pending",
+        trigger: str = None,  # type: ignore
     ) -> ScanHistory:
         sources = (
             [{"type": "github", "value": trigger}]
@@ -25,7 +28,7 @@ class ScanRepository:
         return new_scan
 
     async def update_scan_status(self, scan: ScanHistory, status: str) -> ScanHistory:
-        scan.status = status
+        scan.status = status  # type: ignore
         self.session.add(scan)
         await self.session.commit()
         return scan
