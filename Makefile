@@ -1,4 +1,4 @@
-.PHONY: install dev worker clean init-db lint lint-fix
+.PHONY: install dev worker clean init-db lint lint-fix db-create db-up db-downgrade
 
 # Variables
 PYTHON = .venv/bin/python
@@ -22,6 +22,19 @@ worker:
 init-db:
 	@echo "Initializing database schema..."
 	$(PYTHON) init_db.py
+
+db-create:
+	@if [ -z "$(m)" ]; then echo "Migration message is required. Usage: make db-create m=\"message\""; exit 1; fi
+	@echo "Creating new Alembic migration: $(m)..."
+	.venv/bin/alembic revision --autogenerate -m "$(m)"
+
+db-up:
+	@echo "Upgrading database to latest migration..."
+	.venv/bin/alembic upgrade head
+
+db-downgrade:
+	@echo "Downgrading database by one migration..."
+	.venv/bin/alembic downgrade -1
 
 lint:
 	@echo "Running Ruff linter..."
