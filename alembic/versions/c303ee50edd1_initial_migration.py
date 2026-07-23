@@ -35,7 +35,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.add_column(
-        "scan_history", sa.Column("scanned_repositories", sa.JSON(), nullable=False)
+        "scan_history",
+        sa.Column(
+            "scanned_repositories", sa.JSON(), nullable=False, server_default="[]"
+        ),
     )
     op.alter_column(
         "scan_history",
