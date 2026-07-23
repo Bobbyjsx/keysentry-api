@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://keysentry_admin:ziz!qak-pinnaT-7wy*zze@100.76.107.7:6432/postgres",
+    "postgresql+asyncpg://bobby@localhost:5433/postgres",
 )
 
 

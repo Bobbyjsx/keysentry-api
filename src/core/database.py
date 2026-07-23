@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import AsyncGenerator
 from sqlalchemy import Column, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
@@ -46,7 +47,7 @@ class TimestampMixin:
 Base = declarative_base(cls=TimestampMixin)
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for getting an async database session.
     """
