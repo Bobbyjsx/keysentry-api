@@ -20,7 +20,11 @@ class ScanRepository:
             else []
         )
         new_scan = ScanHistory(
-            user_id=user_id, status=status, trigger=trigger, sources=sources
+            user_id=user_id,
+            status=status,
+            trigger=trigger,
+            sources=sources,
+            sources_scanned=1 if sources else 0,
         )
         self.session.add(new_scan)
         await self.session.commit()

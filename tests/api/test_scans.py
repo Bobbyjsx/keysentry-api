@@ -170,5 +170,5 @@ async def test_scan_webhook_accumulation(client: AsyncClient, db_session):
     # repo1, repo2 = 2 repos
     assert scan.repos_scanned == 2  # type: ignore
     assert len(scan.sources) == 2  # type: ignore
-    assert "repo1" in scan.sources
-    assert "repo2" in scan.sources
+    assert any(s.get("value") == "repo1" for s in scan.sources if isinstance(s, dict))
+    assert any(s.get("value") == "repo2" for s in scan.sources if isinstance(s, dict))

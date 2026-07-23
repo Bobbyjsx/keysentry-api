@@ -124,12 +124,34 @@ class WebhookEngine:
         scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned  # type: ignore
 
         if payload.scanned_repositories:
-            current_sources = (
-                set(scan.sources) if isinstance(scan.sources, list) else set()
-            )
-            current_sources.update(payload.scanned_repositories)
-            scan.sources = list(current_sources)  # type: ignore
-            scan.repos_scanned = len(scan.sources)  # type: ignore
+            current_scanned = scan.scanned_repositories if isinstance(scan.scanned_repositories, list) else []
+            new_scanned = list(set(current_scanned + payload.scanned_repositories))
+            scan.scanned_repositories = new_scanned  # type: ignore
+            scan.repos_scanned = len(new_scanned)  # type: ignore
+
+            from src.models.repository import Repository
+            import datetime
+
+            for repo_name in payload.scanned_repositories:
+                existing_repo = await self.db.scalar(
+                    select(Repository).where(
+                        Repository.user_id == user_uuid,
+                        Repository.name == repo_name,
+                        Repository.provider == "github"
+                    )
+                )
+                if existing_repo:
+                    existing_repo.last_scanned_at = datetime.datetime.now(datetime.timezone.utc)
+                    self.db.add(existing_repo)
+                else:
+                    new_repo = Repository(
+                        user_id=user_uuid,
+                        name=repo_name,
+                        provider="github",
+                        url=f"https://github.com/{repo_name}",
+                        last_scanned_at=datetime.datetime.now(datetime.timezone.utc)
+                    )
+                    self.db.add(new_repo)
 
         self.db.add(scan)
         await self.db.commit()

@@ -26,7 +26,7 @@ class ScanHistory(Base):
     trigger = Column(String, default="manual", nullable=False)
     trigger_link = Column(String)
     sources = Column(JSON, default=list, nullable=False)
-
+    scanned_repositories = Column(JSON, default=list, nullable=False)
 
 class UserSettings(Base):
     __tablename__ = "user_settings"

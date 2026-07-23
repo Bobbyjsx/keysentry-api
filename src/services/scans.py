@@ -108,6 +108,7 @@ class ScanService:
                 "attempt": getattr(scan, "attempt", 1),
                 "error": getattr(scan, "error", None),
                 "sources": scan.sources if scan.sources else [],  # type: ignore
+                "scannedRepositories": getattr(scan, "scanned_repositories", []),
             },
             "keys": [
                 {
