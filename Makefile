@@ -28,11 +28,15 @@ lint:
 	.venv/bin/ruff check .
 	@echo "Running Ruff formatter check..."
 	.venv/bin/ruff format --check .
+	@echo "Running Pyright type checker..."
+	npx pyright
 
 lint-fix:
 	@echo "Formatting and fixing code with Ruff..."
 	.venv/bin/ruff check --fix .
 	.venv/bin/ruff format .
+	@echo "Running Pyright type checker..."
+	npx pyright
 
 clean:
 	@echo "Cleaning up python cache files..."

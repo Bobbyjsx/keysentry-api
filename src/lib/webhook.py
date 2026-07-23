@@ -121,15 +121,15 @@ class WebhookEngine:
         scan.keys_found = scan.keys_found + new_keys_added
 
         # Accumulate files scanned incrementally
-        scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned
+        scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned  # type: ignore
 
         if payload.scanned_repositories:
             current_sources = (
                 set(scan.sources) if isinstance(scan.sources, list) else set()
             )
             current_sources.update(payload.scanned_repositories)
-            scan.sources = list(current_sources)
-            scan.repos_scanned = len(scan.sources)
+            scan.sources = list(current_sources)  # type: ignore
+            scan.repos_scanned = len(scan.sources)  # type: ignore
 
         self.db.add(scan)
         await self.db.commit()

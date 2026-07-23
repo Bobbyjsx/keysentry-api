@@ -117,3 +117,58 @@ async def test_scan_endpoints(client: AsyncClient, db_session, auth_headers):
         assert resp.status_code == 200
         details = resp.json()
         assert details["scan"]["id"] == scan_id
+
+
+@pytest.mark.asyncio
+async def test_scan_webhook_accumulation(client: AsyncClient, db_session):
+    user_id = str(uuid4())
+    scan_id = str(uuid4())
+
+    from src.models.user_data import ScanHistory
+
+    scan = ScanHistory(
+        id=scan_id,
+        user_id=user_id,
+        status="running",
+        files_scanned=5,
+        repos_scanned=0,
+        sources=[],
+    )
+    db_session.add(scan)
+    await db_session.commit()
+
+    payload_1 = {
+        "scan_id": scan_id,
+        "user_id": user_id,
+        "keys_found": [],
+        "status": "in_progress",
+        "files_scanned": 15,
+        "scanned_repositories": ["repo1"],
+    }
+
+    payload_2 = {
+        "scan_id": scan_id,
+        "user_id": user_id,
+        "keys_found": [],
+        "status": "in_progress",
+        "files_scanned": 10,
+        "scanned_repositories": ["repo2"],
+    }
+
+    headers = {"x-internal-token": "test_webhook_secret"}
+
+    resp1 = await client.post("/api/v1/scans/webhook", json=payload_1, headers=headers)
+    assert resp1.status_code == 200
+
+    resp2 = await client.post("/api/v1/scans/webhook", json=payload_2, headers=headers)
+    assert resp2.status_code == 200
+
+    # Verify accumulation
+    await db_session.refresh(scan)
+    # Initial 5 + 15 + 10 = 30
+    assert scan.files_scanned == 30
+    # repo1, repo2 = 2 repos
+    assert scan.repos_scanned == 2
+    assert len(scan.sources) == 2
+    assert "repo1" in scan.sources
+    assert "repo2" in scan.sources
