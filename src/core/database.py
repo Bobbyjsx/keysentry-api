@@ -3,6 +3,8 @@ from sqlalchemy import Column, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
+from sqlalchemy.pool import NullPool
+
 from src.core.config import settings
 
 database_url = settings.DATABASE_URL
@@ -15,6 +17,11 @@ engine = create_async_engine(
     database_url,
     echo=False,
     future=True,
+    poolclass=NullPool,
+    connect_args={
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
 )
 
 AsyncSessionLocal = async_sessionmaker(
