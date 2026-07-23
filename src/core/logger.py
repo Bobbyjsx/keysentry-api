@@ -21,7 +21,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         logger.info(f"Incoming request: {request.method} {request.url.path}")
         response = await call_next(request)
         process_time = time.time() - start_time
-        logger.info(
-            f"Completed request: {request.method} {request.url.path} - Status: {response.status_code} - Duration: {process_time:.4f}s"
-        )
+        status_code = response.status_code
+        message = f"Completed request: {request.method} {request.url.path} - Status: {status_code} - Duration: {process_time:.4f}s"
+
+        if status_code >= 500:
+            logger.error(message)
+        elif status_code >= 400:
+            logger.warning(message)
+        else:
+            logger.info(message)
+
         return response
