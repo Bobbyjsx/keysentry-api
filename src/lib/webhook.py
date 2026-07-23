@@ -120,10 +120,8 @@ class WebhookEngine:
         # Accumulate total keys found
         scan.keys_found = scan.keys_found + new_keys_added
 
-        # Update files and repos (assuming payload has total for this attempt, we should just overwrite or add?)
-        # Wait, if we are keeping track across retries, the worker should send the cumulative total.
-        scan.files_scanned = payload.files_scanned
-        scan.repos_scanned = payload.repos_scanned
+        # Accumulate files scanned incrementally
+        scan.files_scanned = (scan.files_scanned or 0) + payload.files_scanned
 
         if payload.scanned_repositories:
             current_sources = (
@@ -131,6 +129,7 @@ class WebhookEngine:
             )
             current_sources.update(payload.scanned_repositories)
             scan.sources = list(current_sources)
+            scan.repos_scanned = len(scan.sources)
 
         self.db.add(scan)
         await self.db.commit()
